@@ -99,6 +99,40 @@ docker-compose down -v
 
 ---
 
+## Carga de datos de prueba
+
+Para probar toda la API con datos reales de forma rápida, ejecuta el script:
+
+```bash
+./scripts/seed-data.sh
+```
+
+Este script:
+1. Espera a que la API esté disponible (healthcheck).
+2. Crea los usuarios `admin` / `Admin123!` (ADMIN) y `customer` / `Customer123!` (CUSTOMER), si no existen.
+3. Crea **5 películas** (distintos géneros/clasificaciones) con el token de ADMIN.
+4. Crea **6 funciones (showtimes)** futuras en distintas salas.
+5. Crea **3 reservas (bookings)** con el token de CUSTOMER.
+6. Imprime un resumen con los IDs generados y ejemplos de consultas (`curl`) listos para copiar/pegar.
+
+Opciones vía variables de entorno:
+
+| Variable | Descripción |
+|----------|-------------|
+| `BASE_URL` | URL de la API (por defecto `http://localhost:8090`). |
+| `ADMIN_USER` / `ADMIN_PASS` | Credenciales del usuario admin. |
+| `CUSTOMER_USER` / `CUSTOMER_PASS` | Credenciales del usuario customer. |
+
+Ejemplo contra un despliegue remoto:
+
+```bash
+BASE_URL=https://api-ejemplo.com ./scripts/seed-data.sh
+```
+
+> **Nota:** el script está pensado para una base de datos fresca (o `docker-compose down -v && docker-compose up -d`). Si se re-ejecuta sobre datos existentes, creará usuarios solo si faltan y **agregará** nuevas películas/funciones/reservas (no elimina nada). Requiere `curl` y `jq`.
+
+---
+
 ## Colección Postman
 
 Los archivos de Postman para testing de la API están incluidos en este repositorio:

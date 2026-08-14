@@ -6,6 +6,7 @@ import com.cinetest.model.entity.Showtime;
 import com.cinetest.service.ShowtimeService;
 import com.giffing.bucket4j.spring.boot.starter.context.RateLimiting;
 import io.swagger.v3.oas.annotations.Operation;
+import org.springdoc.core.annotations.ParameterObject;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -64,7 +65,7 @@ public class ShowtimeController {
             @Parameter(description = "Optional filter by date (yyyy-MM-dd)") @RequestParam(required = false) LocalDate date,
             @Parameter(description = "Optional minimum price filter") @RequestParam(required = false) BigDecimal minPrice,
             @Parameter(description = "Optional maximum price filter") @RequestParam(required = false) BigDecimal maxPrice,
-            @PageableDefault(sort = "dateTime", direction = Sort.Direction.ASC) Pageable pageable) {
+            @ParameterObject @PageableDefault(sort = "dateTime", direction = Sort.Direction.ASC) Pageable pageable) {
         Page<Showtime> showtimes = showtimeService.getAllShowtimes(movieId, date, minPrice, maxPrice, pageable);
         return ResponseEntity.ok(ApiResponseDTO.success(HttpStatus.OK.value(), "Showtimes retrieved successfully", showtimes));
     }

@@ -7,6 +7,7 @@ import com.cinetest.model.entity.Movie;
 import com.cinetest.service.MovieService;
 import com.giffing.bucket4j.spring.boot.starter.context.RateLimiting;
 import io.swagger.v3.oas.annotations.Operation;
+import org.springdoc.core.annotations.ParameterObject;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -59,7 +60,7 @@ public class MovieController {
     public ResponseEntity<ApiResponseDTO<Page<Movie>>> getAllMovies(
             @Parameter(description = "Optional genre filter (e.g., ACTION, DRAMA)") @RequestParam(required = false) String genre,
             @Parameter(description = "Optional rating filter (e.g., PG, PG_13, R)") @RequestParam(required = false) String rating,
-            @PageableDefault(sort = "title", direction = Sort.Direction.ASC) Pageable pageable) {
+            @ParameterObject @PageableDefault(sort = "title", direction = Sort.Direction.ASC) Pageable pageable) {
         Page<Movie> movies = movieService.getAllMovies(genre, rating, pageable);
         return ResponseEntity.ok(ApiResponseDTO.success(HttpStatus.OK.value(), "Movies retrieved successfully", movies));
     }
