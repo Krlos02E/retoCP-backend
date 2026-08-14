@@ -12,7 +12,7 @@
 #
 # Uso:
 #   ./scripts/seed-data.sh                    # usa http://localhost:8090
-#   BASE_URL=https://api-ejemplo.com ./scripts/seed-data.sh
+#   BASE_URL=https://retocp-backend-production.up.railway.app/ ./scripts/seed-data.sh
 #
 # Requiere: curl, jq
 

@@ -92,10 +92,8 @@ docker-compose down -v
 
 ## Despliegue público
 
-- **API desplegada:** `https://TBD-COMPLETAR-URL`  *(pendiente de configurar)*
-- **Swagger UI (documentación interactiva):** [`https://TBD-COMPLETAR-URL/api/docs`](https://TBD-COMPLETAR-URL/api/docs) *(pendiente de configurar)*
-
-> Actualiza las URLs anteriores con los enlaces de tu plataforma de despliegue (Render, Railway, AWS, etc.).
+- **API desplegada:** `https://retocp-backend-production.up.railway.app/ `
+- **Swagger UI (documentación interactiva):** [`https://retocp-backend-production.up.railway.app/api/docs`](https://TBD-COMPLETAR-URL/api/docs)
 
 ---
 
