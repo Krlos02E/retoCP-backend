@@ -9,6 +9,7 @@ import com.cinetest.repository.BookingRepository;
 import com.cinetest.repository.ShowtimeRepository;
 import com.cinetest.service.BookingService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +22,7 @@ import java.util.UUID;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
@@ -36,10 +38,14 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional
     public Booking createBooking(BookingDTO dto) {
+        log.info("Creating booking for customer='{}' showtime={} seats={}",
+                dto.getCustomerName(), dto.getShowtimeId(), dto.getSeatsBooked());
         Showtime showtime = showtimeRepository.findById(dto.getShowtimeId())
                 .orElseThrow(() -> new ResourceNotFoundException("Showtime not found with id: " + dto.getShowtimeId()));
 
         if (showtime.getAvailableSeats() < dto.getSeatsBooked()) {
+            log.warn("Booking rejected: not enough seats. Showtime={}, available={}, requested={}",
+                    dto.getShowtimeId(), showtime.getAvailableSeats(), dto.getSeatsBooked());
             throw new BusinessRuleException("Not enough seats available for this showtime");
         }
 
@@ -56,7 +62,10 @@ public class BookingServiceImpl implements BookingService {
                 .totalPrice(totalPrice)
                 .build();
 
-        return bookingRepository.save(booking);
+        Booking saved = bookingRepository.save(booking);
+        log.info("Booking created with id={} for customer='{}' total={}",
+                saved.getId(), saved.getCustomerName(), saved.getTotalPrice());
+        return saved;
     }
 
     /**
@@ -66,6 +75,7 @@ public class BookingServiceImpl implements BookingService {
      */
     @Override
     public Booking getBookingById(UUID id) {
+        log.debug("Fetching booking by id={}", id);
         return bookingRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Booking not found with id: " + id));
     }
