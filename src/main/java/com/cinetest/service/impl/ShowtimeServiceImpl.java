@@ -23,7 +23,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ShowtimeServiceImpl implements ShowtimeService {
 
-    private static final int CLEANUP_MARGIN_MINUTES = 15;
+    private static final long CLEANUP_MARGIN_MINUTES = 15;
 
     private final ShowtimeRepository showtimeRepository;
     private final MovieRepository movieRepository;

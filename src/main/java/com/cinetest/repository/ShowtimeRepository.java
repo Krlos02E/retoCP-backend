@@ -22,6 +22,8 @@ public interface ShowtimeRepository extends JpaRepository<Showtime, UUID> {
 
     List<Showtime> findByMovieId(UUID movieId);
 
+    List<Showtime> findByMovieIdAndDateTimeAfterOrderByDateTimeAsc(UUID movieId, java.time.LocalDateTime dateTime);
+
     List<Showtime> findByRoom(String room);
 
     List<Showtime> findByDateTimeBetween(LocalDateTime start, LocalDateTime end);

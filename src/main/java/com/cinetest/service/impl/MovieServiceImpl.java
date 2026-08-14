@@ -1,17 +1,22 @@
 package com.cinetest.service.impl;
 
 import com.cinetest.dto.MovieDTO;
+import com.cinetest.dto.MovieResponse;
 import com.cinetest.exception.ResourceNotFoundException;
 import com.cinetest.model.entity.Movie;
+import com.cinetest.model.entity.Showtime;
 import com.cinetest.model.enums.Genre;
 import com.cinetest.model.enums.Rating;
 import com.cinetest.repository.MovieRepository;
+import com.cinetest.repository.ShowtimeRepository;
 import com.cinetest.service.MovieService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -19,6 +24,7 @@ import java.util.UUID;
 public class MovieServiceImpl implements MovieService {
 
     private final MovieRepository movieRepository;
+    private final ShowtimeRepository showtimeRepository;
 
     @Override
     public Page<Movie> getAllMovies(String genre, String rating, Pageable pageable) {
@@ -28,9 +34,21 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
-    public Movie getMovieById(UUID id) {
-        return movieRepository.findById(id)
+    public MovieResponse getMovieById(UUID id) {
+        Movie movie = movieRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Movie not found with id: " + id));
+
+        List<Showtime> upcoming = showtimeRepository.findByMovieIdAndDateTimeAfterOrderByDateTimeAsc(id, LocalDateTime.now());
+
+        return MovieResponse.builder()
+                .id(movie.getId())
+                .title(movie.getTitle())
+                .synopsis(movie.getSynopsis())
+                .duration(movie.getDuration())
+                .genre(movie.getGenre())
+                .rating(movie.getRating())
+                .upcomingShowtimes(upcoming)
+                .build();
     }
 
     @Override
@@ -47,7 +65,8 @@ public class MovieServiceImpl implements MovieService {
 
     @Override
     public Movie updateMovie(UUID id, MovieDTO dto) {
-        Movie movie = getMovieById(id);
+        Movie movie = movieRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Movie not found with id: " + id));
         movie.setTitle(dto.getTitle());
         movie.setSynopsis(dto.getSynopsis());
         movie.setDuration(dto.getDuration());
@@ -58,7 +77,8 @@ public class MovieServiceImpl implements MovieService {
 
     @Override
     public void deleteMovie(UUID id) {
-        Movie movie = getMovieById(id);
+        Movie movie = movieRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Movie not found with id: " + id));
         movieRepository.delete(movie);
     }
 }

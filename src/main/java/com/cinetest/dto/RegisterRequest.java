@@ -2,6 +2,7 @@ package com.cinetest.dto;
 
 import com.cinetest.model.enums.Role;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 @Data
@@ -16,6 +17,6 @@ public class RegisterRequest {
     @NotBlank
     private String password;
 
-    @NotBlank
+    @NotNull
     private Role role;
 }
