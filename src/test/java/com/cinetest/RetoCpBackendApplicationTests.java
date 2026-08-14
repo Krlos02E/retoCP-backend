@@ -1,10 +1,8 @@
 package com.cinetest;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
-class RetoCpBackendApplicationTests {
+class RetoCpBackendApplicationTests extends BaseIntegrationTest {
 
     @Test
     void contextLoads() {
