@@ -15,6 +15,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+/**
+ * Implementation of {@link BookingService}.
+ * Handles seat reservation logic with pessimistic locking to prevent overbooking.
+ */
 @Service
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
@@ -22,6 +26,13 @@ public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final ShowtimeRepository showtimeRepository;
 
+    /**
+     * {@inheritDoc}
+     * Uses pessimistic write locking on the showtime to avoid race conditions.
+     *
+     * @throws ResourceNotFoundException if the showtime does not exist
+     * @throws BusinessRuleException     if there are not enough available seats
+     */
     @Override
     @Transactional
     public Booking createBooking(BookingDTO dto) {
@@ -48,6 +59,11 @@ public class BookingServiceImpl implements BookingService {
         return bookingRepository.save(booking);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @throws ResourceNotFoundException if the booking does not exist
+     */
     @Override
     public Booking getBookingById(UUID id) {
         return bookingRepository.findById(id)

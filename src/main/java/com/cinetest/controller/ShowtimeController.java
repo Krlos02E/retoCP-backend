@@ -26,6 +26,17 @@ public class ShowtimeController {
 
     private final ShowtimeService showtimeService;
 
+    /**
+     * Lists all showtimes with optional filtering by movie, date and price range.
+     * Supports pagination and sorting.
+     *
+     * @param movieId  optional filter by movie ID
+     * @param date     optional filter by date
+     * @param minPrice optional minimum price filter
+     * @param maxPrice optional maximum price filter
+     * @param pageable pagination and sorting configuration
+     * @return a structured response with a page of showtimes
+     */
     @GetMapping
     public ResponseEntity<ApiResponse<Page<Showtime>>> getAllShowtimes(
             @RequestParam(required = false) UUID movieId,
@@ -37,6 +48,14 @@ public class ShowtimeController {
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK.value(), "Showtimes retrieved successfully", showtimes));
     }
 
+    /**
+     * Creates a new showtime.
+     * Requires ADMIN role.
+     * Validates that the schedule does not overlap with existing showtimes in the same room.
+     *
+     * @param dto the showtime data
+     * @return a structured response with the created showtime
+     */
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Showtime>> createShowtime(@Valid @RequestBody ShowtimeDTO dto) {

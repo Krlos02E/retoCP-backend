@@ -13,21 +13,43 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Global exception handler that catches and formats all exceptions thrown by the application.
+ * Ensures consistent {@link ApiResponse} structure for both success and error responses.
+ */
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    /**
+     * Handles cases where a requested entity does not exist in the database.
+     *
+     * @param ex the ResourceNotFoundException containing the error message
+     * @return a 404 response with the exception message
+     */
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleResourceNotFound(ResourceNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ApiResponse.error(HttpStatus.NOT_FOUND.value(), ex.getMessage()));
     }
 
+    /**
+     * Handles business rule violations such as overbooking or schedule conflicts.
+     *
+     * @param ex the BusinessRuleException containing the violation details
+     * @return a 409 response with the exception message
+     */
     @ExceptionHandler(BusinessRuleException.class)
     public ResponseEntity<ApiResponse<Void>> handleBusinessRule(BusinessRuleException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(ApiResponse.error(HttpStatus.CONFLICT.value(), ex.getMessage()));
     }
 
+    /**
+     * Handles validation errors from {@code @Valid} annotated request bodies.
+     *
+     * @param ex the MethodArgumentNotValidException containing field-level errors
+     * @return a 400 response with a map of field names to error messages
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Map<String, String>>> handleValidation(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
@@ -38,6 +60,12 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.success(HttpStatus.BAD_REQUEST.value(), "Validation failed", errors));
     }
 
+    /**
+     * Handles invalid request body formats, including malformed enum values.
+     *
+     * @param ex the HttpMessageNotReadableException containing the parse error
+     * @return a 400 response with a descriptive error message
+     */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiResponse<Void>> handleInvalidFormat(HttpMessageNotReadableException ex) {
         String message = "Invalid request body";
@@ -48,12 +76,24 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(HttpStatus.BAD_REQUEST.value(), message));
     }
 
+    /**
+     * Handles authorization failures when a user lacks the required role for an endpoint.
+     *
+     * @param ex the AccessDeniedException
+     * @return a 403 response with a generic access denied message
+     */
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiResponse<Void>> handleAccessDenied(AccessDeniedException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(ApiResponse.error(HttpStatus.FORBIDDEN.value(), "Access denied. Insufficient permissions."));
     }
 
+    /**
+     * Fallback handler for any unhandled exception.
+     *
+     * @param ex the generic Exception
+     * @return a 500 response with the exception message
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGeneric(Exception ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

@@ -19,6 +19,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Implementation of {@link MovieService}.
+ * Manages movie catalog operations including soft deletion.
+ */
 @Service
 @RequiredArgsConstructor
 public class MovieServiceImpl implements MovieService {
@@ -26,6 +30,10 @@ public class MovieServiceImpl implements MovieService {
     private final MovieRepository movieRepository;
     private final ShowtimeRepository showtimeRepository;
 
+    /**
+     * {@inheritDoc}
+     * Parses genre and rating from string to enum values.
+     */
     @Override
     public Page<Movie> getAllMovies(String genre, String rating, Pageable pageable) {
         Genre genreEnum = (genre != null && !genre.isBlank()) ? Genre.valueOf(genre.toUpperCase()) : null;
@@ -33,6 +41,12 @@ public class MovieServiceImpl implements MovieService {
         return movieRepository.findByGenreAndRating(genreEnum, ratingEnum, pageable);
     }
 
+    /**
+     * {@inheritDoc}
+     * Includes upcoming showtimes for the movie.
+     *
+     * @throws ResourceNotFoundException if the movie does not exist
+     */
     @Override
     public MovieResponse getMovieById(UUID id) {
         Movie movie = movieRepository.findById(id)
@@ -51,6 +65,9 @@ public class MovieServiceImpl implements MovieService {
                 .build();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Movie createMovie(MovieDTO dto) {
         Movie movie = Movie.builder()
@@ -63,6 +80,11 @@ public class MovieServiceImpl implements MovieService {
         return movieRepository.save(movie);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @throws ResourceNotFoundException if the movie does not exist
+     */
     @Override
     public Movie updateMovie(UUID id, MovieDTO dto) {
         Movie movie = movieRepository.findById(id)
@@ -75,6 +97,12 @@ public class MovieServiceImpl implements MovieService {
         return movieRepository.save(movie);
     }
 
+    /**
+     * {@inheritDoc}
+     * Performs a soft delete via the entity's {@code @SQLDelete} mapping.
+     *
+     * @throws ResourceNotFoundException if the movie does not exist
+     */
     @Override
     public void deleteMovie(UUID id) {
         Movie movie = movieRepository.findById(id)

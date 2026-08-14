@@ -18,6 +18,12 @@ public class JwtUtil {
     @Value("${jwt.expiration-hours}")
     private long expirationHours;
 
+    /**
+     * Generates a signed JWT token for the given user.
+     *
+     * @param user the authenticated user entity
+     * @return a compact JWT string signed with HMAC256
+     */
     public String generateToken(User user) {
         return JWT.create()
                 .withSubject(user.getUsername())

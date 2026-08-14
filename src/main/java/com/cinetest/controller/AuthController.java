@@ -17,6 +17,12 @@ public class AuthController {
 
     private final AuthService authService;
 
+    /**
+     * Registers a new user.
+     *
+     * @param dto the registration request containing username, password and role
+     * @return a structured response indicating successful registration
+     */
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<Void>> register(@Valid @RequestBody RegisterRequest dto) {
         authService.register(dto);
@@ -24,6 +30,12 @@ public class AuthController {
                 .body(ApiResponse.success(HttpStatus.CREATED.value(), "User registered successfully"));
     }
 
+    /**
+     * Authenticates a user and returns a JWT token.
+     *
+     * @param dto the login request containing username and password
+     * @return a structured response containing the JWT token
+     */
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<String>> login(@Valid @RequestBody LoginRequest dto) {
         String token = authService.login(dto);

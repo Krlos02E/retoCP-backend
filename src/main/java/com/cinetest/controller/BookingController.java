@@ -20,6 +20,13 @@ public class BookingController {
 
     private final BookingService bookingService;
 
+    /**
+     * Creates a new booking for a showtime.
+     * Requires an authenticated user with CUSTOMER role.
+     *
+     * @param dto the booking request containing showtime, customer info and seats
+     * @return a structured response with the created booking
+     */
     @PostMapping
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<ApiResponse<Booking>> createBooking(@Valid @RequestBody BookingDTO dto) {
@@ -28,6 +35,13 @@ public class BookingController {
                 .body(ApiResponse.success(HttpStatus.CREATED.value(), "Booking created successfully", booking));
     }
 
+    /**
+     * Retrieves a booking by its ID.
+     * Requires an authenticated user.
+     *
+     * @param id the UUID of the booking
+     * @return a structured response with the booking details
+     */
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Booking>> getBookingById(@PathVariable UUID id) {

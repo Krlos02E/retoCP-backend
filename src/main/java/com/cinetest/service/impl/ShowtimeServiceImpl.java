@@ -19,6 +19,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Implementation of {@link ShowtimeService}.
+ * Validates showtime scheduling to prevent overlapping in the same room.
+ */
 @Service
 @RequiredArgsConstructor
 public class ShowtimeServiceImpl implements ShowtimeService {
@@ -28,17 +32,32 @@ public class ShowtimeServiceImpl implements ShowtimeService {
     private final ShowtimeRepository showtimeRepository;
     private final MovieRepository movieRepository;
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Page<Showtime> getAllShowtimes(UUID movieId, LocalDate date, BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable) {
         return showtimeRepository.findAllWithFilters(movieId, date, minPrice, maxPrice, pageable);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @throws ResourceNotFoundException if the showtime does not exist
+     */
     @Override
     public Showtime getShowtimeById(UUID id) {
         return showtimeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Showtime not found with id: " + id));
     }
 
+    /**
+     * {@inheritDoc}
+     * Checks for schedule overlap considering movie duration plus a cleanup margin.
+     *
+     * @throws ResourceNotFoundException if the movie does not exist
+     * @throws BusinessRuleException     if the schedule overlaps with an existing showtime in the same room
+     */
     @Override
     public Showtime createShowtime(ShowtimeDTO dto) {
         Movie movie = movieRepository.findById(dto.getMovieId())
