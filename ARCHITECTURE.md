@@ -209,7 +209,6 @@ Supongamos que el cliente envía `POST /api/movies` con un body inválido (por e
 
 ## 4. Principios de diseño aplicados
 
-- **KISS (Keep It Simple, Stupid)**: No se introdujeron microservicios, event buses ni CQRS. El alcance del challenge (monolito REST) se resolvió con herramientas estándar del ecosistema Spring.
 - **DRY (Don't Repeat Yourself)**: `ApiResponseDTO<T>` estandariza la estructura de respuesta para éxito y error en todos los controllers. `GlobalExceptionHandler` centraliza el mapeo de excepciones a HTTP.
 - **Single Responsibility**: Cada clase tiene una razón de cambio. Por ejemplo, `MovieServiceImpl` solo orquesta lógica de películas; no conoce detalles HTTP.
 - **Fail fast**: Validaciones de entrada (`@Valid`) ocurren en la capa de presentación antes de llegar a negocio. Las reglas de dominio (`BusinessRuleException`) ocurren en servicios.
