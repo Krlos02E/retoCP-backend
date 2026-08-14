@@ -1,9 +1,16 @@
 package com.cinetest.controller;
 
-import com.cinetest.dto.ApiResponse;
+import com.cinetest.dto.ApiResponseDTO;
 import com.cinetest.dto.BookingDTO;
 import com.cinetest.model.entity.Booking;
 import com.cinetest.service.BookingService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -13,9 +20,14 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+/**
+ * REST controller for booking endpoints.
+ * Handles creation and retrieval of bookings.
+ */
 @RestController
 @RequestMapping("/api/bookings")
 @RequiredArgsConstructor
+@Tag(name = "Bookings", description = "Endpoints for managing seat reservations")
 public class BookingController {
 
     private final BookingService bookingService;
@@ -29,10 +41,23 @@ public class BookingController {
      */
     @PostMapping
     @PreAuthorize("hasRole('CUSTOMER')")
-    public ResponseEntity<ApiResponse<Booking>> createBooking(@Valid @RequestBody BookingDTO dto) {
+    @SecurityRequirement(name = "BearerAuth")
+    @Operation(
+            summary = "Create a booking",
+            description = "Reserves seats for a specific showtime. Validates seat availability and updates stock. Requires CUSTOMER role.",
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "Booking created successfully", content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+                    @ApiResponse(responseCode = "400", description = "Invalid request body or validation error", content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized - JWT token missing or invalid", content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+                    @ApiResponse(responseCode = "403", description = "Forbidden - requires CUSTOMER role", content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+                    @ApiResponse(responseCode = "404", description = "Showtime not found", content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+                    @ApiResponse(responseCode = "409", description = "Not enough seats available for this showtime", content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+            }
+    )
+    public ResponseEntity<ApiResponseDTO<Booking>> createBooking(@Valid @RequestBody BookingDTO dto) {
         Booking booking = bookingService.createBooking(dto);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(HttpStatus.CREATED.value(), "Booking created successfully", booking));
+                .body(ApiResponseDTO.success(HttpStatus.CREATED.value(), "Booking created successfully", booking));
     }
 
     /**
@@ -44,8 +69,19 @@ public class BookingController {
      */
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ApiResponse<Booking>> getBookingById(@PathVariable UUID id) {
+    @SecurityRequirement(name = "BearerAuth")
+    @Operation(
+            summary = "Get booking by ID",
+            description = "Retrieves details of a specific booking. Any authenticated user can access this endpoint.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Booking retrieved successfully", content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized - JWT token missing or invalid", content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+                    @ApiResponse(responseCode = "404", description = "Booking not found", content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+            }
+    )
+    public ResponseEntity<ApiResponseDTO<Booking>> getBookingById(
+            @Parameter(description = "UUID of the booking to retrieve") @PathVariable UUID id) {
         Booking booking = bookingService.getBookingById(id);
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK.value(), "Booking retrieved successfully", booking));
+        return ResponseEntity.ok(ApiResponseDTO.success(HttpStatus.OK.value(), "Booking retrieved successfully", booking));
     }
 }

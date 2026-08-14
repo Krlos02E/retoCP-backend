@@ -1,6 +1,6 @@
 package com.cinetest.exception;
 
-import com.cinetest.dto.ApiResponse;
+import com.cinetest.dto.ApiResponseDTO;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,9 +27,9 @@ public class GlobalExceptionHandler {
      * @return a 404 response with the exception message
      */
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ApiResponse<Void>> handleResourceNotFound(ResourceNotFoundException ex) {
+    public ResponseEntity<ApiResponseDTO<Void>> handleResourceNotFound(ResourceNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.error(HttpStatus.NOT_FOUND.value(), ex.getMessage()));
+                .body(ApiResponseDTO.error(HttpStatus.NOT_FOUND.value(), ex.getMessage()));
     }
 
     /**
@@ -39,9 +39,9 @@ public class GlobalExceptionHandler {
      * @return a 409 response with the exception message
      */
     @ExceptionHandler(BusinessRuleException.class)
-    public ResponseEntity<ApiResponse<Void>> handleBusinessRule(BusinessRuleException ex) {
+    public ResponseEntity<ApiResponseDTO<Void>> handleBusinessRule(BusinessRuleException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(ApiResponse.error(HttpStatus.CONFLICT.value(), ex.getMessage()));
+                .body(ApiResponseDTO.error(HttpStatus.CONFLICT.value(), ex.getMessage()));
     }
 
     /**
@@ -51,13 +51,13 @@ public class GlobalExceptionHandler {
      * @return a 400 response with a map of field names to error messages
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Map<String, String>>> handleValidation(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ApiResponseDTO<Map<String, String>>> handleValidation(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getFieldErrors().forEach(error ->
                 errors.put(error.getField(), error.getDefaultMessage())
         );
         return ResponseEntity.badRequest()
-                .body(ApiResponse.success(HttpStatus.BAD_REQUEST.value(), "Validation failed", errors));
+                .body(ApiResponseDTO.success(HttpStatus.BAD_REQUEST.value(), "Validation failed", errors));
     }
 
     /**
@@ -67,13 +67,13 @@ public class GlobalExceptionHandler {
      * @return a 400 response with a descriptive error message
      */
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ApiResponse<Void>> handleInvalidFormat(HttpMessageNotReadableException ex) {
+    public ResponseEntity<ApiResponseDTO<Void>> handleInvalidFormat(HttpMessageNotReadableException ex) {
         String message = "Invalid request body";
         if (ex.getCause() instanceof InvalidFormatException ife) {
             message = "Invalid value for field: " + ife.getPath().get(0).getFieldName();
         }
         return ResponseEntity.badRequest()
-                .body(ApiResponse.error(HttpStatus.BAD_REQUEST.value(), message));
+                .body(ApiResponseDTO.error(HttpStatus.BAD_REQUEST.value(), message));
     }
 
     /**
@@ -83,9 +83,9 @@ public class GlobalExceptionHandler {
      * @return a 403 response with a generic access denied message
      */
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ApiResponse<Void>> handleAccessDenied(AccessDeniedException ex) {
+    public ResponseEntity<ApiResponseDTO<Void>> handleAccessDenied(AccessDeniedException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(ApiResponse.error(HttpStatus.FORBIDDEN.value(), "Access denied. Insufficient permissions."));
+                .body(ApiResponseDTO.error(HttpStatus.FORBIDDEN.value(), "Access denied. Insufficient permissions."));
     }
 
     /**
@@ -95,8 +95,8 @@ public class GlobalExceptionHandler {
      * @return a 500 response with the exception message
      */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<Void>> handleGeneric(Exception ex) {
+    public ResponseEntity<ApiResponseDTO<Void>> handleGeneric(Exception ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR.value(), ex.getMessage()));
+                .body(ApiResponseDTO.error(HttpStatus.INTERNAL_SERVER_ERROR.value(), ex.getMessage()));
     }
 }

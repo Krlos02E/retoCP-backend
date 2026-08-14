@@ -33,3 +33,14 @@ management:
   endpoint:
     health:
       show-details: always
+
+springdoc:
+  swagger-ui:
+    path: /api/docs
+    operationsSorter: method
+    tagsSorter: alpha
+    configUrl: /api/docs-json/swagger-config
+    url: /api/docs-json
+  api-docs:
+    path: /api/docs-json
+    enabled: true

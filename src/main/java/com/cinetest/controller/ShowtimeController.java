@@ -1,9 +1,16 @@
 package com.cinetest.controller;
 
-import com.cinetest.dto.ApiResponse;
+import com.cinetest.dto.ApiResponseDTO;
 import com.cinetest.dto.ShowtimeDTO;
 import com.cinetest.model.entity.Showtime;
 import com.cinetest.service.ShowtimeService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -19,9 +26,14 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
+/**
+ * REST controller for showtime endpoints.
+ * Handles listing and creation of showtimes.
+ */
 @RestController
 @RequestMapping("/api/showtimes")
 @RequiredArgsConstructor
+@Tag(name = "Showtimes", description = "Endpoints for managing movie showtimes (screenings)")
 public class ShowtimeController {
 
     private final ShowtimeService showtimeService;
@@ -38,14 +50,21 @@ public class ShowtimeController {
      * @return a structured response with a page of showtimes
      */
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<Showtime>>> getAllShowtimes(
-            @RequestParam(required = false) UUID movieId,
-            @RequestParam(required = false) LocalDate date,
-            @RequestParam(required = false) BigDecimal minPrice,
-            @RequestParam(required = false) BigDecimal maxPrice,
+    @Operation(
+            summary = "List all showtimes",
+            description = "Retrieves a paginated list of showtimes. Optionally filter by movie, date or price range.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Showtimes retrieved successfully", content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+            }
+    )
+    public ResponseEntity<ApiResponseDTO<Page<Showtime>>> getAllShowtimes(
+            @Parameter(description = "Optional filter by movie ID") @RequestParam(required = false) UUID movieId,
+            @Parameter(description = "Optional filter by date (yyyy-MM-dd)") @RequestParam(required = false) LocalDate date,
+            @Parameter(description = "Optional minimum price filter") @RequestParam(required = false) BigDecimal minPrice,
+            @Parameter(description = "Optional maximum price filter") @RequestParam(required = false) BigDecimal maxPrice,
             @PageableDefault(sort = "dateTime", direction = Sort.Direction.ASC) Pageable pageable) {
         Page<Showtime> showtimes = showtimeService.getAllShowtimes(movieId, date, minPrice, maxPrice, pageable);
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK.value(), "Showtimes retrieved successfully", showtimes));
+        return ResponseEntity.ok(ApiResponseDTO.success(HttpStatus.OK.value(), "Showtimes retrieved successfully", showtimes));
     }
 
     /**
@@ -58,9 +77,22 @@ public class ShowtimeController {
      */
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Showtime>> createShowtime(@Valid @RequestBody ShowtimeDTO dto) {
+    @SecurityRequirement(name = "BearerAuth")
+    @Operation(
+            summary = "Create a new showtime",
+            description = "Creates a new showtime screening. Validates that the schedule does not overlap with existing showtimes in the same room. Requires ADMIN role.",
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "Showtime created successfully", content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+                    @ApiResponse(responseCode = "400", description = "Invalid request body or validation error", content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized - JWT token missing or invalid", content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+                    @ApiResponse(responseCode = "403", description = "Forbidden - requires ADMIN role", content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+                    @ApiResponse(responseCode = "404", description = "Movie not found", content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+                    @ApiResponse(responseCode = "409", description = "Schedule overlaps with an existing showtime in the same room", content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+            }
+    )
+    public ResponseEntity<ApiResponseDTO<Showtime>> createShowtime(@Valid @RequestBody ShowtimeDTO dto) {
         Showtime showtime = showtimeService.createShowtime(dto);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(HttpStatus.CREATED.value(), "Showtime created successfully", showtime));
+                .body(ApiResponseDTO.success(HttpStatus.CREATED.value(), "Showtime created successfully", showtime));
     }
 }

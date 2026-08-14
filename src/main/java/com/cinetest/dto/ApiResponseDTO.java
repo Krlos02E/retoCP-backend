@@ -8,15 +8,15 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ApiResponse<T> {
+public class ApiResponseDTO<T> {
 
     private int status;
     private LocalDateTime timestamp;
     private String message;
     private T data;
 
-    public static <T> ApiResponse<T> success(int status, String message, T data) {
-        return ApiResponse.<T>builder()
+    public static <T> ApiResponseDTO<T> success(int status, String message, T data) {
+        return ApiResponseDTO.<T>builder()
                 .status(status)
                 .timestamp(LocalDateTime.now())
                 .message(message)
@@ -24,12 +24,12 @@ public class ApiResponse<T> {
                 .build();
     }
 
-    public static ApiResponse<Void> success(int status, String message) {
+    public static ApiResponseDTO<Void> success(int status, String message) {
         return success(status, message, null);
     }
 
-    public static <T> ApiResponse<T> error(int status, String message) {
-        return ApiResponse.<T>builder()
+    public static <T> ApiResponseDTO<T> error(int status, String message) {
+        return ApiResponseDTO.<T>builder()
                 .status(status)
                 .timestamp(LocalDateTime.now())
                 .message(message)
