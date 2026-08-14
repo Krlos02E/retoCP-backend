@@ -4,6 +4,7 @@ import com.cinetest.dto.ApiResponseDTO;
 import com.cinetest.dto.BookingDTO;
 import com.cinetest.model.entity.Booking;
 import com.cinetest.service.BookingService;
+import com.giffing.bucket4j.spring.boot.starter.context.RateLimiting;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -40,6 +41,7 @@ public class BookingController {
      * @return a structured response with the created booking
      */
     @PostMapping
+    @RateLimiting(name = "bookings-create")
     @PreAuthorize("hasRole('CUSTOMER')")
     @SecurityRequirement(name = "BearerAuth")
     @Operation(
@@ -68,6 +70,7 @@ public class BookingController {
      * @return a structured response with the booking details
      */
     @GetMapping("/{id}")
+    @RateLimiting(name = "bookings-read")
     @PreAuthorize("isAuthenticated()")
     @SecurityRequirement(name = "BearerAuth")
     @Operation(

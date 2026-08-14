@@ -4,6 +4,7 @@ import com.cinetest.dto.ApiResponseDTO;
 import com.cinetest.dto.LoginRequest;
 import com.cinetest.dto.RegisterRequest;
 import com.cinetest.service.AuthService;
+import com.giffing.bucket4j.spring.boot.starter.context.RateLimiting;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -34,6 +35,7 @@ public class AuthController {
      * @return a structured response indicating successful registration
      */
     @PostMapping("/register")
+    @RateLimiting(name = "register")
     @Operation(
             summary = "Register a new user",
             description = "Creates a new user account with a username, password and role. Returns 201 on success, 400 on validation error, 409 if username already exists.",
@@ -56,6 +58,7 @@ public class AuthController {
      * @return a structured response containing the JWT token
      */
     @PostMapping("/login")
+    @RateLimiting(name = "login")
     @Operation(
             summary = "Login and obtain JWT token",
             description = "Authenticates a user with username and password. Returns a JWT token to be used in the Authorization header for protected endpoints.",

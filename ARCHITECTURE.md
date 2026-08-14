@@ -72,6 +72,7 @@ graph TD
         Docker["Docker Compose"]
         Actuator["Spring Boot Actuator<br/>/api/health"]
         Swagger["SpringDoc OpenAPI<br/>/api/docs"]
+        RateLimit["RateLimitAspect (Bucket4j)<br/>@RateLimiting + Ehcache"]
     end
 
     Cliente -->|HTTP + Bearer Token| JwtFilter
@@ -79,6 +80,8 @@ graph TD
     SecConfig -->|Configura| JwtFilter
     JwtUtil -->|Genera / Valida| JwtFilter
 
+    Presentacion -.->|Rate limit 429| RateLimit
+    RateLimit -->|Interceptor de métodos anotados| Presentacion
     Presentacion -->|Delega| Negocio
     Negocio -->|Consulta| Persistencia
     Persistencia -->|JPA / Hibernate| BD
@@ -118,7 +121,8 @@ El diagrama muestra cuatro capas principales más dos bloques transversales:
   - MySQL 8.0 almacena todas las entidades. En entornos de test se usa Testcontainers con la misma imagen `mysql:8.0` para garantizar fidelidad de dialecto y queries.
 
 - **Infraestructura transversal**
-  - `GlobalExceptionHandler` (`@ControllerAdvice`) captura excepciones de toda la aplicación (`ResourceNotFoundException`, `BusinessRuleException`, `AccessDeniedException`, etc.) y las convierte en respuestas `ApiResponseDTO` con el código HTTP correcto.
+  - `GlobalExceptionHandler` (`@ControllerAdvice`) captura excepciones de toda la aplicación (`ResourceNotFoundException`, `BusinessRuleException`, `AccessDeniedException`, `RateLimitException`, etc.) y las convierte en respuestas `ApiResponseDTO` con el código HTTP correcto.
+  - `RateLimitAspect` (Bucket4j) intercepta los métodos de controller anotados con `@RateLimiting`, aplica un token bucket por IP/usuario y, al excederse, responde `429 Too Many Requests` con `Retry-After`.
   - Docker Compose orquesta los contenedores de la aplicación y la base de datos.
   - Spring Boot Actuator expone `/api/health` para health checks.
   - SpringDoc OpenAPI genera la documentación interactiva accesible en `/api/docs`.
@@ -204,6 +208,32 @@ Supongamos que el cliente envía `POST /api/movies` con un body inválido (por e
 | `lombok` | última | Reducción de boilerplate (getters, builders, etc.) |
 | `testcontainers` | 1.19.8 | Tests de integración con MySQL real |
 | `spring-boot-starter-validation` | 4.0.7 | Validación declarativa de DTOs (`@NotBlank`, `@Min`) |
+| `bucket4j-spring-boot-starter` | 0.14.0 | Rate limiting por anotación `@RateLimiting` (token bucket) |
+| `spring-boot-starter-aspectj` | 4.0.7 | Infraestructura AOP requerida por `@RateLimiting` |
+| `spring-boot-starter-cache` + `ehcache` (jakarta) | 4.0.7 | Cache in-memory donde se persiste el estado de los buckets |
+
+### 3.9 Rate Limiting: Bucket4j + anotación declarativa
+
+Se adoptó **Bucket4j** (`bucket4j-spring-boot-starter`) para limitar el tráfico de los endpoints vía la anotación `@RateLimiting(name = "...")`:
+
+- **Token bucket por defecto**: capacidad = ráfaga máxima permitida; refill greedy de tokens por minuto. El estado de cada bucket vive en una cache **Ehcache in-memory** (`cache-name: buckets`, TTL 1h).
+- **Configuración declarativa**: los límites y la cache-key se definen en `application.yml` bajo `bucket4j.methods`, y cada método del controller referencia un bucket por nombre con `@RateLimiting`. Esto mantiene el límite visible junto al endpoint y centraliza los valores.
+- **Cache-key por consumidor**: los endpoints públicos se limitan por **IP** (`@requestInfo.ip()`) y los autenticados por **usuario** (`@requestInfo.username() ?: @requestInfo.ip()`). El bean `RequestInfo` resuelve ambos valores y se referencia desde las expresiones SpEL.
+- **Respuesta 429**: cuando se excede el límite, Bucket4j lanza `RateLimitException`; el `GlobalExceptionHandler` la convierte en `ApiResponseDTO` con HTTP `429` y el header `Retry-After`.
+- **Endpoints exentos**: health, info, Swagger y la documentación no llevan `@RateLimiting`, por lo que nunca se ven bloqueados (importante para healthchecks).
+- **Limitación**: al ser in-memory, el límite es **por instancia**. Para un despliegue multi-nodo habría que migrar a un cache distribuido (Redis/Hazelcast) que el propio starter soporta.
+
+Límites definidos (justificación):
+
+| Bucket | Endpoints | Capacidad / min | Clave | Justificación |
+|--------|-----------|-----------------|-------|---------------|
+| `login` | `POST /api/auth/login` | 10 | IP | Prevenir fuerza bruta / credential stuffing |
+| `register` | `POST /api/auth/register` | 5 | IP | Prevenir spam de cuentas |
+| `movies-read` | `GET /api/movies*` | 120 | IP | Lectura pública barata |
+| `showtimes-read` | `GET /api/showtimes*` | 120 | IP | Lectura pública barata |
+| `bookings-create` | `POST /api/bookings` | 10 | usuario | Escritura con lock pesimista; evitar acaparamiento/DoS |
+| `bookings-read` | `GET /api/bookings/{id}` | 60 | usuario | Lectura autenticada |
+| `admin-write` | `POST/PUT/DELETE /api/movies*`, `POST /api/showtimes` | 30 | usuario | Escrituras admin de bajo volumen |
 
 ---
 

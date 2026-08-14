@@ -5,6 +5,7 @@ import com.cinetest.dto.MovieDTO;
 import com.cinetest.dto.MovieResponse;
 import com.cinetest.model.entity.Movie;
 import com.cinetest.service.MovieService;
+import com.giffing.bucket4j.spring.boot.starter.context.RateLimiting;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -47,6 +48,7 @@ public class MovieController {
      * @return a structured response with a page of movies
      */
     @GetMapping
+    @RateLimiting(name = "movies-read")
     @Operation(
             summary = "List all movies",
             description = "Retrieves a paginated list of movies. Optionally filter by genre or rating.",
@@ -69,6 +71,7 @@ public class MovieController {
      * @return a structured response with movie details and showtimes
      */
     @GetMapping("/{id}")
+    @RateLimiting(name = "movies-read")
     @Operation(
             summary = "Get movie by ID",
             description = "Retrieves detailed information about a specific movie, including its upcoming showtimes.",
@@ -91,6 +94,7 @@ public class MovieController {
      * @return a structured response with the created movie
      */
     @PostMapping
+    @RateLimiting(name = "admin-write")
     @PreAuthorize("hasRole('ADMIN')")
     @SecurityRequirement(name = "BearerAuth")
     @Operation(
@@ -118,6 +122,7 @@ public class MovieController {
      * @return a structured response with the updated movie
      */
     @PutMapping("/{id}")
+    @RateLimiting(name = "admin-write")
     @PreAuthorize("hasRole('ADMIN')")
     @SecurityRequirement(name = "BearerAuth")
     @Operation(
@@ -146,6 +151,7 @@ public class MovieController {
      * @return a structured response confirming deletion
      */
     @DeleteMapping("/{id}")
+    @RateLimiting(name = "admin-write")
     @PreAuthorize("hasRole('ADMIN')")
     @SecurityRequirement(name = "BearerAuth")
     @Operation(

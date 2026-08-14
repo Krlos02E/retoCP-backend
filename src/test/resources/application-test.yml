@@ -3,6 +3,9 @@ spring:
     hikari:
       max-lifetime: 10000
       connection-timeout: 5000
+
+bucket4j:
+  enabled: false
   jpa:
     hibernate:
       ddl-auto: create

@@ -4,6 +4,7 @@ import com.cinetest.dto.ApiResponseDTO;
 import com.cinetest.dto.ShowtimeDTO;
 import com.cinetest.model.entity.Showtime;
 import com.cinetest.service.ShowtimeService;
+import com.giffing.bucket4j.spring.boot.starter.context.RateLimiting;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -50,6 +51,7 @@ public class ShowtimeController {
      * @return a structured response with a page of showtimes
      */
     @GetMapping
+    @RateLimiting(name = "showtimes-read")
     @Operation(
             summary = "List all showtimes",
             description = "Retrieves a paginated list of showtimes. Optionally filter by movie, date or price range.",
@@ -76,6 +78,7 @@ public class ShowtimeController {
      * @return a structured response with the created showtime
      */
     @PostMapping
+    @RateLimiting(name = "admin-write")
     @PreAuthorize("hasRole('ADMIN')")
     @SecurityRequirement(name = "BearerAuth")
     @Operation(

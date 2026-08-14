@@ -2,7 +2,9 @@ package com.cinetest.exception;
 
 import com.cinetest.dto.ApiResponseDTO;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import com.giffing.bucket4j.spring.boot.starter.context.RateLimitException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Global exception handler that catches and formats all exceptions thrown by the application.
@@ -71,6 +74,21 @@ public class GlobalExceptionHandler {
      * @param ex the HttpMessageNotReadableException containing the parse error
      * @return a 400 response with a descriptive error message
      */
+    /**
+     * Handles rate limiting rejections from the {@code @RateLimiting} annotation.
+     *
+     * @param ex the RateLimitException containing the retry-after window
+     * @return a 429 response with a Retry-After header
+     */
+    @ExceptionHandler(RateLimitException.class)
+    public ResponseEntity<ApiResponseDTO<Void>> handleRateLimit(RateLimitException ex) {
+        long retryAfterSeconds = Math.max(1, TimeUnit.NANOSECONDS.toSeconds(ex.getRetryAfterNanoSeconds()));
+        log.warn("Rate limit exceeded: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header(HttpHeaders.RETRY_AFTER, String.valueOf(retryAfterSeconds))
+                .body(ApiResponseDTO.error(HttpStatus.TOO_MANY_REQUESTS.value(), "Too many requests"));
+    }
+
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiResponseDTO<Void>> handleInvalidFormat(HttpMessageNotReadableException ex) {
         log.warn("Invalid request body: {}", ex.getMessage());

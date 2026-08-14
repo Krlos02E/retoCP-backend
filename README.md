@@ -137,7 +137,7 @@ La garantía de no overbooking se gestionaría en una capa de memoria distribuid
 Para evitar el colapso del servidor por retención de hilos y agotamiento del pool de conexiones, se implementarán los siguientes cambios estructurales:
 
 * **Asincronía en la Persistencia:** El endpoint principal `POST /api/bookings` dejará de escribir directamente en la base de datos relacional. Tras la validación en Redis, responderá inmediatamente al cliente con un código `202 Accepted` y un ID de seguimiento.
-* **Desacoplamiento con Workers:** Se extraerá la lógica de persistencia del monolito hacia un microservicio independiente (*Booking Processor*). Este componente se configurará en la nube con **Auto-scaling horizontal** automático para instanciar réplicas bajo demanda, procesando las transacciones aprobadas a un ritmo seguro para el almacenamiento final.
+* **Desacoplamiento:** Se extraerá la lógica de persistencia del monolito hacia un microservicio independiente (*Booking Processor*). Este componente se configurará en la nube con **Auto-scaling horizontal** automático para instanciar réplicas bajo demanda, procesando las transacciones aprobadas a un ritmo seguro para el almacenamiento final.
 
 ---
 
@@ -145,4 +145,5 @@ Para evitar el colapso del servidor por retención de hilos y agotamiento del po
 Para sostener la infraestructura distribuida y el flujo asíncrono, se integrarán los siguientes componentes:
 
 * **Apache Kafka (Patrón de Mensajería Asíncrona):** Se utilizará como un buffer de absorción de tráfico masivo. El API Gateway publicará los eventos en el tópico `reserva-solicitada` y Kafka garantizará el almacenamiento temporal y el orden estricto de llegada por partición para que los Workers los consuman de forma controlada.
+* **Redis:** Base de datos en memoria para la gestión de contadores atómicos de asientos disponibles y para la implementación del patrón **Fail-Fast**, aprovechable tambien para definir un rate limiting si se escala en microservicios la aplicacion.
 * **Patrón Fail-Fast:** Implementado directamente en el API perimetral utilizando el contador de Redis. Toda solicitud que llegue cuando el contador sea menor a 0 será bloqueada y rebotada en milisegundos, impidiendo que el tráfico excedente ingrese a la red interna o sature la cola de Kafka.

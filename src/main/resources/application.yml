@@ -2,6 +2,10 @@ spring:
   application:
     name: retoCP-backend
 
+  cache:
+    jcache:
+      config: classpath:ehcache.xml
+
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3308}/${DB_NAME:cinetest_db}
     username: ${DB_USERNAME:root}
@@ -49,3 +53,70 @@ logging:
   level:
     root: info
     com.cinetest: debug
+
+bucket4j:
+  enabled: true
+  methods:
+    - name: login
+      cache-name: buckets
+      rate-limit:
+        cache-key: "@requestInfo.ip()"
+        bandwidths:
+          - capacity: 10
+            time: 1
+            unit: minutes
+            refill-speed: greedy
+    - name: register
+      cache-name: buckets
+      rate-limit:
+        cache-key: "@requestInfo.ip()"
+        bandwidths:
+          - capacity: 5
+            time: 1
+            unit: minutes
+            refill-speed: greedy
+    - name: movies-read
+      cache-name: buckets
+      rate-limit:
+        cache-key: "@requestInfo.ip()"
+        bandwidths:
+          - capacity: 120
+            time: 1
+            unit: minutes
+            refill-speed: greedy
+    - name: showtimes-read
+      cache-name: buckets
+      rate-limit:
+        cache-key: "@requestInfo.ip()"
+        bandwidths:
+          - capacity: 120
+            time: 1
+            unit: minutes
+            refill-speed: greedy
+    - name: bookings-create
+      cache-name: buckets
+      rate-limit:
+        cache-key: "@requestInfo.username() ?: @requestInfo.ip()"
+        bandwidths:
+          - capacity: 10
+            time: 1
+            unit: minutes
+            refill-speed: greedy
+    - name: bookings-read
+      cache-name: buckets
+      rate-limit:
+        cache-key: "@requestInfo.username() ?: @requestInfo.ip()"
+        bandwidths:
+          - capacity: 60
+            time: 1
+            unit: minutes
+            refill-speed: greedy
+    - name: admin-write
+      cache-name: buckets
+      rate-limit:
+        cache-key: "@requestInfo.username() ?: @requestInfo.ip()"
+        bandwidths:
+          - capacity: 30
+            time: 1
+            unit: minutes
+            refill-speed: greedy
