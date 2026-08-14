@@ -115,6 +115,13 @@ Este script:
 5. Crea **3 reservas (bookings)** con el token de CUSTOMER.
 6. Imprime un resumen con los IDs generados y ejemplos de consultas (`curl`) listos para copiar/pegar.
 
+### Usuarios creados
+
+| Usuario | Contraseña | Rol | Puede usar |
+|---------|-----------|-----|------------|
+| `admin` | `Admin123!` | ADMIN | Crear/editar/eliminar películas y crear showtimes (`POST/PUT/DELETE /api/movies*`, `POST /api/showtimes`) |
+| `customer` | `Customer123!` | CUSTOMER | Crear y consultar reservas (`POST /api/bookings`, `GET /api/bookings/{id}`) |
+
 Opciones vía variables de entorno:
 
 | Variable | Descripción |
@@ -122,12 +129,6 @@ Opciones vía variables de entorno:
 | `BASE_URL` | URL de la API (por defecto `http://localhost:8090`). |
 | `ADMIN_USER` / `ADMIN_PASS` | Credenciales del usuario admin. |
 | `CUSTOMER_USER` / `CUSTOMER_PASS` | Credenciales del usuario customer. |
-
-Ejemplo contra un despliegue remoto:
-
-```bash
-BASE_URL=https://api-ejemplo.com ./scripts/seed-data.sh
-```
 
 > **Nota:** el script está pensado para una base de datos fresca (o `docker-compose down -v && docker-compose up -d`). Si se re-ejecuta sobre datos existentes, creará usuarios solo si faltan y **agregará** nuevas películas/funciones/reservas (no elimina nada). Requiere `curl` y `jq`.
 
